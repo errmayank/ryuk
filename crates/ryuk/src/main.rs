@@ -1,26 +1,10 @@
 use gpui::{
-    App, Application, Context, FontWeight, KeyBinding, Window, WindowBounds, WindowOptions,
-    actions, div, prelude::*, px, rgb, size,
+    App, AppContext, Application, KeyBinding, WindowBounds, WindowOptions, actions, px, size,
 };
 
+use workspace::Workspace;
+
 actions!(ryuk, [Quit]);
-
-struct Ryuk {}
-
-impl Render for Ryuk {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .flex()
-            .bg(rgb(0x141414))
-            .size_full()
-            .justify_center()
-            .items_center()
-            .text_2xl()
-            .text_color(rgb(0xffffff))
-            .font_weight(FontWeight::MEDIUM)
-            .child("Welcome to Ryuk!".to_string())
-    }
-}
 
 fn main() {
     Application::new().run(|cx: &mut App| {
@@ -40,7 +24,7 @@ fn main() {
                 window_bounds: Some(WindowBounds::centered(size(px(1180.), px(760.0)), cx)),
                 ..Default::default()
             },
-            |_, cx| cx.new(|_| Ryuk {}),
+            |_, cx| cx.new(Workspace::new),
         )
         .unwrap();
     });

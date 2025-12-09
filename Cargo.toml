@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/ryuk"]
+members = ["crates/ryuk", "crates/workspace"]
 
 [workspace.package]
 version = "0.0.0"
@@ -11,3 +11,4 @@ authors = ["Mayank Verma <errmayank@gmail.com>"]
 
 [workspace.dependencies]
 gpui = { git = "https://github.com/zed-industries/zed" }
+workspace = { path = "crates/workspace" }
