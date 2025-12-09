@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/ryuk", "crates/workspace"]
+members = ["crates/assets", "crates/ryuk", "crates/workspace"]
 
 [workspace.package]
 version = "0.0.0"
@@ -10,5 +10,14 @@ license = "AGPL-3.0-or-later"
 authors = ["Mayank Verma <errmayank@gmail.com>"]
 
 [workspace.dependencies]
+#==================================================#
+# External crates
+#==================================================#
+anyhow = { version = "1.0" }
 gpui = { git = "https://github.com/zed-industries/zed" }
+rust-embed = { version = "8.0", features = ["debug-embed"] }
+#==================================================#
+# Workspace member crates
+#==================================================#
+assets = { path = "crates/assets" }
 workspace = { path = "crates/workspace" }
