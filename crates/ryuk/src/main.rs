@@ -1,5 +1,6 @@
 use gpui::{
-    App, AppContext, Application, KeyBinding, WindowBounds, WindowOptions, actions, px, size,
+    App, AppContext, Application, Bounds, KeyBinding, WindowBounds, WindowOptions, actions, px,
+    size,
 };
 
 use workspace::Workspace;
@@ -19,9 +20,15 @@ fn main() {
         })
         .detach();
 
+        cx.activate(true);
+
+        let window_size = size(px(1180.0), px(760.0));
+        let mut bounds = Bounds::centered(None, window_size, cx);
+        bounds.origin.y -= px(36.0);
+
         cx.open_window(
             WindowOptions {
-                window_bounds: Some(WindowBounds::centered(size(px(1180.), px(760.0)), cx)),
+                window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..Default::default()
             },
             |_, cx| cx.new(Workspace::new),
