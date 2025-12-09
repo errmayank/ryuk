@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/assets", "crates/ryuk", "crates/workspace"]
+members = ["crates/assets", "crates/icons", "crates/ryuk", "crates/workspace"]
 
 [workspace.package]
 version = "0.0.0"
@@ -16,8 +16,11 @@ authors = ["Mayank Verma <errmayank@gmail.com>"]
 anyhow = { version = "1.0" }
 gpui = { git = "https://github.com/zed-industries/zed" }
 rust-embed = { version = "8.0", features = ["debug-embed"] }
+serde = { version = "1.0", features = ["derive"] }
+strum = { version = "0.26", features = ["derive"] }
 #==================================================#
 # Workspace member crates
 #==================================================#
 assets = { path = "crates/assets" }
+icons = { path = "crates/icons" }
 workspace = { path = "crates/workspace" }
