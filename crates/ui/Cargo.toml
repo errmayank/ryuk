@@ -1,5 +1,5 @@
 [package]
-name = "assets"
+name = "ui"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -10,10 +10,10 @@ authors.workspace = true
 workspace = true
 
 [lib]
-name = "assets"
-path = "src/assets.rs"
+name = "ui"
+path = "src/ui.rs"
 
 [dependencies]
-anyhow = { workspace = true }
 gpui = { workspace = true }
-rust-embed = { workspace = true }
+icons = { workspace = true }
+smallvec = { workspace = true }

@@ -6,9 +6,13 @@ publish.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[lints]
+workspace = true
+
 [lib]
 name = "workspace"
 path = "src/workspace.rs"
 
 [dependencies]
 gpui = { workspace = true }
+ui = { workspace = true }
