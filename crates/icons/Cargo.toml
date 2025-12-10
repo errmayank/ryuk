@@ -6,6 +6,9 @@ publish.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[lints]
+workspace = true
+
 [lib]
 name = "icons"
 path = "src/icons.rs"
