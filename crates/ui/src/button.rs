@@ -183,7 +183,7 @@ impl RenderOnce for Button {
             ButtonSize::Compact => IconSize::XSmall,
             ButtonSize::None => IconSize::XSmall,
         };
-        let (px_value, gap_value) = match self.size {
+        let (padding_x, gap) = match self.size {
             ButtonSize::Large => (rems_from_px(12.), rems_from_px(6.)),
             ButtonSize::Medium => (rems_from_px(10.), rems_from_px(5.)),
             ButtonSize::Default => (rems_from_px(8.), rems_from_px(4.)),
@@ -197,10 +197,10 @@ impl RenderOnce for Button {
             .flex()
             .justify_center()
             .items_center()
-            .gap(gap_value)
+            .gap(gap)
             .h(self.height.unwrap_or(self.size.rems().into()))
             .when_some(self.width, |this, width| this.w(width).justify_center())
-            .px(px_value)
+            .px(padding_x)
             .rounded_sm()
             .bg(colors.bg)
             .text_color(colors.text)
