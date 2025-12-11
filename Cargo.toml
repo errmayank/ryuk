@@ -4,6 +4,7 @@ members = [
   "crates/assets",
   "crates/icons",
   "crates/ryuk",
+  "crates/text",
   "crates/ui",
   "crates/workspace",
 ]
@@ -24,6 +25,7 @@ type_complexity = "allow"
 #==================================================#
 anyhow = { version = "1.0" }
 gpui = { git = "https://github.com/zed-industries/zed" }
+ropey = { version = "1.6" }
 rust-embed = { version = "8.0", features = ["debug-embed"] }
 serde = { version = "1.0", features = ["derive"] }
 smallvec = { version = "1.15" }
@@ -33,5 +35,6 @@ strum = { version = "0.26", features = ["derive"] }
 #==================================================#
 assets = { path = "crates/assets" }
 icons = { path = "crates/icons" }
+text = { path = "crates/text" }
 ui = { path = "crates/ui" }
 workspace = { path = "crates/workspace" }
