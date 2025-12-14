@@ -14,6 +14,5 @@ name = "text"
 path = "src/text.rs"
 
 [dependencies]
-anyhow = { workspace = true }
 ropey = { workspace = true }
 serde = { workspace = true }

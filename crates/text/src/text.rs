@@ -2,7 +2,6 @@ use ropey::Rope;
 use std::{
     fmt::{self, Display, Formatter},
     ops::Range,
-    str::FromStr,
 };
 
 #[derive(Clone, Debug)]
@@ -52,13 +51,11 @@ impl Default for TextBuffer {
     }
 }
 
-impl FromStr for TextBuffer {
-    type Err = anyhow::Error;
-
-    fn from_str(text: &str) -> Result<Self, Self::Err> {
-        Ok(Self {
+impl From<&str> for TextBuffer {
+    fn from(text: &str) -> Self {
+        Self {
             rope: Rope::from_str(text),
-        })
+        }
     }
 }
 
