@@ -1,0 +1,20 @@
+[package]
+name = "buffer"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+name = "buffer"
+path = "src/buffer.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+gpui = { workspace = true }
+text = { workspace = true }
+serde = { workspace = true }

@@ -677,6 +677,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "buffer"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "gpui",
+ "serde",
+ "text",
+]
+
+[[package]]
 name = "built"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

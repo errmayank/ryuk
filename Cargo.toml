@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
   "crates/assets",
+  "crates/buffer",
   "crates/icons",
   "crates/ryuk",
   "crates/text",
@@ -34,6 +35,7 @@ strum = { version = "0.26", features = ["derive"] }
 # Workspace member crates
 ################################################################
 assets = { path = "crates/assets" }
+buffer = { path = "crates/buffer" }
 icons = { path = "crates/icons" }
 text = { path = "crates/text" }
 ui = { path = "crates/ui" }
