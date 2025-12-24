@@ -4,7 +4,8 @@ use gpui::{
 };
 
 use editor::{
-    Backspace, Delete, MoveDown, MoveUp, Newline, ToggleBold, ToggleItalic, ToggleUnderline,
+    Backspace, Delete, DeleteToBeginningOfLine, DeleteToEndOfLine, MoveDown, MoveLeft, MoveRight,
+    MoveUp, Newline, ToggleBold, ToggleItalic, ToggleUnderline,
 };
 use workspace::Workspace;
 
@@ -27,7 +28,11 @@ fn main() {
             cx.bind_keys([
                 // Edit
                 KeyBinding::new("backspace", Backspace, None),
+                KeyBinding::new("cmd-backspace", DeleteToBeginningOfLine, None),
+                KeyBinding::new("ctrl-u", DeleteToBeginningOfLine, None),
                 KeyBinding::new("delete", Delete, None),
+                KeyBinding::new("cmd-delete", DeleteToEndOfLine, None),
+                KeyBinding::new("ctrl-k", DeleteToEndOfLine, None),
                 // Format
                 KeyBinding::new("cmd-b", ToggleBold, None),
                 KeyBinding::new("cmd-i", ToggleItalic, None),
@@ -36,6 +41,8 @@ fn main() {
                 KeyBinding::new("enter", Newline, None),
                 KeyBinding::new("up", MoveUp, None),
                 KeyBinding::new("down", MoveDown, None),
+                KeyBinding::new("left", MoveLeft, None),
+                KeyBinding::new("right", MoveRight, None),
             ]);
 
             cx.activate(true);

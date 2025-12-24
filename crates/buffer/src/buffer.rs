@@ -70,6 +70,10 @@ impl Buffer {
         self.text.point_to_offset(point)
     }
 
+    pub fn max_point(&self) -> TextPoint {
+        self.text.max_point()
+    }
+
     pub fn slice(&self, range: Range<usize>) -> String {
         self.text.slice(range).to_string()
     }

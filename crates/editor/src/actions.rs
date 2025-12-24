@@ -5,10 +5,20 @@ use gpui::Action;
 #[action(namespace = editor)]
 pub struct Backspace;
 
+/// Delete from cursor to beginning of the line
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct DeleteToBeginningOfLine;
+
 /// Delete the character after cursor
 #[derive(PartialEq, Clone, Default, Action)]
 #[action(namespace = editor)]
 pub struct Delete;
+
+/// Delete from cursor to end of the line
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct DeleteToEndOfLine;
 
 /// Toggle bold formatting on selected text
 #[derive(PartialEq, Clone, Default, Action)]
@@ -39,3 +49,13 @@ pub struct MoveUp;
 #[derive(PartialEq, Clone, Default, Action)]
 #[action(namespace = editor)]
 pub struct MoveDown;
+
+/// Move cursor left one character
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct MoveLeft;
+
+/// Move cursor right one character
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct MoveRight;

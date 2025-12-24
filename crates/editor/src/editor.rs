@@ -27,16 +27,30 @@ impl Render for Editor {
             .track_focus(&focus_handle)
             .size_full()
             .cursor(CursorStyle::IBeam)
-            .on_action(cx.listener(|view, action: &Backspace, window, cx| {
+            .on_action(cx.listener(|view, _action: &Backspace, window, cx| {
                 view.editor.update(cx, |editor, cx| {
-                    editor.backspace(action, window, cx);
+                    editor.backspace(window, cx);
                 });
             }))
-            .on_action(cx.listener(|view, action: &Delete, window, cx| {
+            .on_action(
+                cx.listener(|view, _action: &DeleteToBeginningOfLine, window, cx| {
+                    view.editor.update(cx, |editor, cx| {
+                        editor.delete_to_beginning_of_line(window, cx);
+                    });
+                }),
+            )
+            .on_action(cx.listener(|view, _action: &Delete, window, cx| {
                 view.editor.update(cx, |editor, cx| {
-                    editor.delete(action, window, cx);
+                    editor.delete(window, cx);
                 });
             }))
+            .on_action(
+                cx.listener(|view, _action: &DeleteToEndOfLine, window, cx| {
+                    view.editor.update(cx, |editor, cx| {
+                        editor.delete_to_end_of_line(window, cx);
+                    });
+                }),
+            )
             .on_action(cx.listener(|view, action: &ToggleBold, window, cx| {
                 view.editor.update(cx, |editor, cx| {
                     editor.toggle_bold(action, window, cx);
@@ -66,6 +80,14 @@ impl Render for Editor {
                 view.editor.update(cx, |editor, cx| {
                     editor.move_down(action, window, cx);
                 });
+            }))
+            .on_action(cx.listener(|view, _action: &MoveLeft, window, cx| {
+                view.editor
+                    .update(cx, |editor, cx| editor.move_left(window, cx))
+            }))
+            .on_action(cx.listener(|view, _action: &MoveRight, window, cx| {
+                view.editor
+                    .update(cx, |editor, cx| editor.move_right(window, cx))
             }))
             .child(EditorElement::new(self.editor.clone()))
     }

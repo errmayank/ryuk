@@ -8,7 +8,7 @@ use buffer::{Buffer, Selection};
 use text::TextPoint;
 
 use crate::{
-    Backspace, Delete, MoveDown, MoveUp, Newline,
+    MoveDown, MoveUp, Newline,
     actions::{ToggleBold, ToggleItalic, ToggleUnderline},
     element::PositionMap,
 };
@@ -111,7 +111,7 @@ impl EditorState {
     }
 
     /// Deletes the character before the cursor or the selected text.
-    pub fn backspace(&mut self, _action: &Backspace, _window: &mut Window, cx: &mut Context<Self>) {
+    pub fn backspace(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         let selection = self.selected_range;
         if selection.is_empty() && selection.start > 0 {
             self.selected_range = Selection::new(selection.start - 1, selection.start);
@@ -128,8 +128,23 @@ impl EditorState {
         cx.notify();
     }
 
+    /// Delete from cursor to beginning of the current line.
+    pub fn delete_to_beginning_of_line(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let buffer = self.buffer().read(cx);
+        let cursor = self.selected_range.start;
+        let point = buffer.offset_to_point(cursor);
+        let line_start = buffer.point_to_offset(TextPoint::new(point.row, 0));
+
+        if cursor == line_start {
+            return;
+        }
+
+        self.selected_range = Selection::new(line_start, cursor);
+        self.backspace(window, cx);
+    }
+
     /// Deletes the character after the cursor or the selected text.
-    pub fn delete(&mut self, _action: &Delete, _window: &mut Window, cx: &mut Context<Self>) {
+    pub fn delete(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         let selection = self.selected_range;
         let buffer_len = self.buffer.read(cx).len();
 
@@ -146,6 +161,22 @@ impl EditorState {
         }
 
         cx.notify();
+    }
+
+    /// Delete from cursor to end of the current line.
+    pub fn delete_to_end_of_line(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let buffer = self.buffer().read(cx);
+        let cursor = self.selected_range.start;
+        let point = buffer.offset_to_point(cursor);
+        let line_len = buffer.line_len(point.row);
+        let line_end = buffer.point_to_offset(TextPoint::new(point.row, line_len));
+
+        if cursor == line_end {
+            return;
+        }
+
+        self.selected_range = Selection::new(cursor, line_end);
+        self.delete(window, cx);
     }
 
     /// Inserts a newline character at the cursor position.
@@ -206,6 +237,51 @@ impl EditorState {
         let new_column = current_point.column.min(next_line_len);
 
         let new_offset = buffer.point_to_offset(TextPoint::new(next_row, new_column));
+        self.move_to(new_offset, cx);
+    }
+
+    /// Move cursor left one character, wrapping to previous line if at start of line.
+    pub fn move_left(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        let buffer = self.buffer.read(cx);
+        let cursor = self.selected_range.start;
+        if cursor == 0 {
+            return;
+        }
+
+        let point = buffer.offset_to_point(cursor);
+        let new_offset = if point.column > 0 {
+            cursor - 1
+        } else if point.row > 0 {
+            let prev_row = point.row - 1;
+            let prev_line_len = buffer.line_len(prev_row);
+
+            buffer.point_to_offset(TextPoint::new(prev_row, prev_line_len - 1))
+        } else {
+            return;
+        };
+
+        self.move_to(new_offset, cx);
+    }
+
+    /// Move cursor right one character, wrapping to next line if at end of line.
+    pub fn move_right(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        let buffer = self.buffer().read(cx);
+        let cursor = self.selected_range.start;
+        if cursor >= buffer.len() {
+            return;
+        }
+
+        let point = buffer.offset_to_point(cursor);
+        let new_offset = if point.column < buffer.line_len(point.row) {
+            cursor + 1
+        } else if point.row < buffer.max_point().row {
+            let next_row = point.row + 1;
+
+            buffer.point_to_offset(TextPoint::new(next_row, 0))
+        } else {
+            return;
+        };
+
         self.move_to(new_offset, cx);
     }
 
