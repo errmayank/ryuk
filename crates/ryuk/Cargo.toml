@@ -12,5 +12,6 @@ workspace = true
 
 [dependencies]
 assets = { workspace = true }
+editor = { workspace = true }
 gpui = { workspace = true }
 workspace = { workspace = true }

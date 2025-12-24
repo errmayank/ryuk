@@ -1,10 +1,15 @@
-use gpui::{Window, div, prelude::*, rgb};
+use gpui::{Entity, Window, div, prelude::*, rgb};
 
-pub struct Pane {}
+use editor::Editor;
+
+pub struct Pane {
+    editor: Entity<Editor>,
+}
 
 impl Pane {
-    pub fn new(_cx: &mut Context<Self>) -> Self {
-        Self {}
+    pub fn new(cx: &mut Context<Self>) -> Self {
+        let editor = cx.new(Editor::new);
+        Self { editor }
     }
 }
 
@@ -16,6 +21,6 @@ impl Render for Pane {
             .size_full()
             .bg(rgb(0x1a1a1a))
             .p_2()
-            .child("Content")
+            .child(self.editor.clone())
     }
 }

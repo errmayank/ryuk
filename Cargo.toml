@@ -3,6 +3,7 @@ resolver = "3"
 members = [
   "crates/assets",
   "crates/buffer",
+  "crates/editor",
   "crates/icons",
   "crates/ryuk",
   "crates/text",
@@ -36,6 +37,7 @@ strum = { version = "0.26", features = ["derive"] }
 ################################################################
 assets = { path = "crates/assets" }
 buffer = { path = "crates/buffer" }
+editor = { path = "crates/editor" }
 icons = { path = "crates/icons" }
 text = { path = "crates/text" }
 ui = { path = "crates/ui" }

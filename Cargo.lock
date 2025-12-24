@@ -1428,6 +1428,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
+name = "editor"
+version = "0.0.0"
+dependencies = [
+ "buffer",
+ "gpui",
+ "text",
+ "ui",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4421,6 +4431,7 @@ name = "ryuk"
 version = "0.0.0"
 dependencies = [
  "assets",
+ "editor",
  "gpui",
  "workspace",
 ]
@@ -6673,6 +6684,7 @@ checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
 name = "workspace"
 version = "0.0.0"
 dependencies = [
+ "editor",
  "gpui",
  "ui",
 ]

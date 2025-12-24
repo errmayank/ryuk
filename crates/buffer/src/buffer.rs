@@ -1,12 +1,12 @@
 mod format_span;
 mod selection;
 
-pub use format_span::FormatSpan;
-pub use selection::Selection;
+pub use format_span::*;
+pub use selection::*;
 
 use std::ops::Range;
 
-use text::TextBuffer;
+use text::{TextBuffer, TextPoint};
 
 #[derive(Clone, Debug)]
 pub struct Buffer {
@@ -47,6 +47,27 @@ impl Buffer {
 
     pub fn text(&self) -> String {
         self.text.to_string()
+    }
+
+    pub fn line_count(&self) -> usize {
+        self.text.max_point().row + 1
+    }
+
+    /// Returns the text of a specific line (without trailing newline)
+    pub fn line(&self, line_idx: usize) -> Option<String> {
+        self.text.line(line_idx)
+    }
+
+    pub fn line_len(&self, row: usize) -> usize {
+        self.text.line_len(row)
+    }
+
+    pub fn offset_to_point(&self, offset: usize) -> TextPoint {
+        self.text.offset_to_point(offset)
+    }
+
+    pub fn point_to_offset(&self, point: TextPoint) -> usize {
+        self.text.point_to_offset(point)
     }
 
     pub fn slice(&self, range: Range<usize>) -> String {
