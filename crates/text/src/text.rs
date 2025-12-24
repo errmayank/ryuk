@@ -19,11 +19,7 @@ impl TextBuffer {
     }
 
     pub fn line_len(&self, row: usize) -> usize {
-        if row >= self.rope.len_lines() {
-            return 0;
-        }
-
-        self.rope.line(row).len_bytes()
+        self.line(row).map(|s| s.len()).unwrap_or(0)
     }
 
     pub fn is_empty(&self) -> bool {
