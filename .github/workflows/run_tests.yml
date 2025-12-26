@@ -63,6 +63,18 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@v4
 
+      - name: "Install Linux dependencies"
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libx11-xcb-dev \
+            libxkbcommon-x11-dev \
+            libwayland-dev \
+            libfontconfig-dev \
+            libasound2-dev \
+            libssl-dev
+
       - name: "Run Clippy (Unix)"
         if: runner.os != 'Windows'
         run: ./script/clippy
