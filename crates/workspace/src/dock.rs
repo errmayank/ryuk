@@ -20,7 +20,7 @@ impl Dock {
         Self {
             size: DEFAULT_DOCK_SIZE,
             position: DockPosition::Left,
-            visible: true,
+            visible: false,
             focus_handle: cx.focus_handle(),
         }
     }
