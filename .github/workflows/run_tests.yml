@@ -1,0 +1,75 @@
+name: "Run Tests"
+
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "1"
+
+jobs:
+  check_style:
+    name: "Check Style"
+    if: github.repository == 'errmayank/ryuk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Check Prettier formatting"
+        run: ./script/prettier
+        shell: bash
+
+      - name: "Check Rust formatting"
+        run: cargo fmt --all -- --check
+
+      - name: "Check for typos"
+        uses: crate-ci/typos@v1.40.0
+
+  run_tests:
+    name: "Run Tests (${{ matrix.name }})"
+    if: github.repository == 'errmayank/ryuk'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Linux x86_64"
+            platform: ubuntu-latest
+
+          - name: "macOS ARM64"
+            platform: macos-latest
+
+          - name: "macOS Intel"
+            platform: macos-15-intel
+
+          - name: "Windows x86_64"
+            platform: windows-latest
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Run Clippy (Unix)"
+        if: runner.os != 'Windows'
+        run: ./script/clippy
+        shell: bash
+
+      - name: "Run Clippy (Windows)"
+        if: runner.os == 'Windows'
+        run: ./script/clippy.ps1
+        shell: pwsh
+
+      - name: "Install Nextest"
+        uses: taiki-e/install-action@nextest
+
+      - name: "Run tests"
+        run: cargo nextest run --workspace --no-fail-fast
