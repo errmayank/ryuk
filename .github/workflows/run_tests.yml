@@ -40,31 +40,15 @@ jobs:
       - name: "Check for typos"
         uses: crate-ci/typos@v1.40.0
 
-  run_tests:
-    name: "${{ matrix.name }}"
+  run_tests_linux_x86_64:
+    name: "Run tests / Linux x86_64"
     if: github.repository == 'errmayank/ryuk'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: "Linux x86_64"
-            platform: ubuntu-latest
-
-          - name: "macOS ARM64"
-            platform: macos-latest
-
-          - name: "macOS Intel"
-            platform: macos-15-intel
-
-          - name: "Windows x86_64"
-            platform: windows-latest
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v4
 
       - name: "Install Linux dependencies"
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -75,13 +59,61 @@ jobs:
             libasound2-dev \
             libssl-dev
 
-      - name: "Run Clippy (Unix)"
-        if: runner.os != 'Windows'
+      - name: "Run Clippy"
         run: ./script/clippy
         shell: bash
 
-      - name: "Run Clippy (Windows)"
-        if: runner.os == 'Windows'
+      - name: "Install Nextest"
+        uses: taiki-e/install-action@nextest
+
+      - name: "Run tests"
+        run: cargo nextest run --workspace --no-fail-fast
+
+  run_tests_macos_arm64:
+    name: "Run tests / macOS ARM64"
+    if: github.repository == 'errmayank/ryuk'
+    runs-on: macos-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Run Clippy"
+        run: ./script/clippy
+        shell: bash
+
+      - name: "Install Nextest"
+        uses: taiki-e/install-action@nextest
+
+      - name: "Run tests"
+        run: cargo nextest run --workspace --no-fail-fast
+
+  run_tests_macos_x86_64:
+    name: "Run tests / macOS x86_64"
+    if: github.repository == 'errmayank/ryuk'
+    runs-on: macos-15-intel
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Run Clippy"
+        run: ./script/clippy
+        shell: bash
+
+      - name: "Install Nextest"
+        uses: taiki-e/install-action@nextest
+
+      - name: "Run tests"
+        run: cargo nextest run --workspace --no-fail-fast
+
+  run_tests_windows_x86_64:
+    name: "Run tests / Windows x86_64"
+    if: github.repository == 'errmayank/ryuk'
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Run Clippy"
         run: ./script/clippy.ps1
         shell: pwsh
 
