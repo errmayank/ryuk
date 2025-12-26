@@ -1,5 +1,5 @@
 [package]
-name = "text"
+name = "util"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -10,12 +10,10 @@ authors.workspace = true
 workspace = true
 
 [lib]
-name = "text"
-path = "src/text.rs"
+name = "util"
+path = "src/util.rs"
 
 [features]
 test-support = []
 
 [dependencies]
-ropey = { workspace = true }
-serde = { workspace = true }

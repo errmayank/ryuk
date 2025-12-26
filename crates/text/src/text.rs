@@ -26,8 +26,8 @@ impl TextBuffer {
         self.len() == 0
     }
 
-    pub fn insert(&mut self, offset: usize, text: &str) {
-        self.rope.insert(offset, text);
+    pub fn insert(&mut self, char_idx: usize, text: &str) {
+        self.rope.insert(char_idx, text);
     }
 
     pub fn remove(&mut self, range: Range<usize>) {

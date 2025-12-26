@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 use buffer::{Buffer, FormatSpan};
 use text::TextPoint;
 
-use crate::state::EditorState;
+use crate::Editor;
 
 #[derive(Clone)]
 pub struct LineLayout {
@@ -51,11 +51,11 @@ impl PositionMap {
 }
 
 pub struct EditorElement {
-    editor: Entity<EditorState>,
+    editor: Entity<Editor>,
 }
 
 impl EditorElement {
-    pub fn new(editor: Entity<EditorState>) -> Self {
+    pub fn new(editor: Entity<Editor>) -> Self {
         Self { editor }
     }
 
@@ -205,7 +205,7 @@ impl Element for EditorElement {
             byte_offset += text.len() + 1;
         }
 
-        let selection = editor.selection();
+        let selection = &editor.selection;
         let start_point = buffer.offset_to_point(selection.start);
         let end_point = buffer.offset_to_point(selection.end);
         let line_height = window.line_height();

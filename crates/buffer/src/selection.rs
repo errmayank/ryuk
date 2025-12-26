@@ -1,21 +1,38 @@
-use serde::{Deserialize, Serialize};
 use std::ops::Range;
 
-/// Represents a range of selected text or cursor (if start == end)
-///
-/// Uses byte offsets (not char offsets) and all offsets must be
-/// on UTF-8 character boundaries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
+pub enum SelectionGoal {
+    #[default]
+    None,
+    HorizontalPosition(f64),
+}
+
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct Selection {
-    /// Start byte offset
     pub start: usize,
-    /// End byte offset (exclusive)
     pub end: usize,
+    pub reversed: bool,
+    pub goal: SelectionGoal,
 }
 
 impl Selection {
     pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
+        Self {
+            start,
+            end,
+            reversed: false,
+            goal: SelectionGoal::None,
+        }
+    }
+
+    /// A place where the selection had stopped at.
+    pub fn head(&self) -> usize {
+        if self.reversed { self.start } else { self.end }
+    }
+
+    /// A place where selection was initiated from.
+    pub fn tail(&self) -> usize {
+        if self.reversed { self.end } else { self.start }
     }
 
     pub fn cursor(position: usize) -> Self {

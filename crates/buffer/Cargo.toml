@@ -13,6 +13,9 @@ workspace = true
 name = "buffer"
 path = "src/buffer.rs"
 
+[features]
+test-support = ["text/test-support"]
+
 [dependencies]
 anyhow = { workspace = true }
 gpui = { workspace = true }
