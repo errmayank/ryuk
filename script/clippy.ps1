@@ -21,3 +21,7 @@ if ($needAddWorkspace) {
 else {
     & $Cargo clippy --release --all-targets --all-features -- --deny warnings
 }
+
+if (Get-Command typos -ErrorAction Ignore) {
+    & typos
+}
