@@ -1,5 +1,6 @@
 use gpui::{
-    MouseButton, MouseDownEvent, MouseUpEvent, Pixels, Window, deferred, div, prelude::*, px, rgb,
+    App, FocusHandle, Focusable, MouseButton, MouseDownEvent, MouseUpEvent, Pixels, Window,
+    deferred, div, prelude::*, px, rgb,
 };
 
 use crate::{DockPosition, DraggedDock};
@@ -11,14 +12,16 @@ pub struct Dock {
     size: Pixels,
     position: DockPosition,
     visible: bool,
+    focus_handle: FocusHandle,
 }
 
 impl Dock {
-    pub fn new(_cx: &mut Context<Self>) -> Self {
+    pub fn new(cx: &mut Context<Self>) -> Self {
         Self {
             size: DEFAULT_DOCK_SIZE,
             position: DockPosition::Left,
             visible: true,
+            focus_handle: cx.focus_handle(),
         }
     }
 
@@ -27,9 +30,19 @@ impl Dock {
         cx.notify();
     }
 
+    pub fn visible(&self) -> bool {
+        self.visible
+    }
+
     pub fn toggle_visibility(&mut self, cx: &mut Context<Self>) {
         self.visible = !self.visible;
         cx.notify();
+    }
+}
+
+impl Focusable for Dock {
+    fn focus_handle(&self, _cx: &App) -> FocusHandle {
+        self.focus_handle.clone()
     }
 }
 
@@ -82,6 +95,7 @@ impl Render for Dock {
         };
 
         div()
+            .track_focus(&self.focus_handle(cx))
             .flex()
             .flex_col()
             .h_full()
@@ -91,7 +105,7 @@ impl Render for Dock {
                     .bg(rgb(0x141414))
                     .border_r_1()
                     .border_color(rgb(0x2a2a2a))
-                    .child(div().min_w(self.size).h_full().p_2().child("Dock"))
+                    .child(div().min_w(self.size).h_full())
                     .child(create_resize_handle())
             })
     }

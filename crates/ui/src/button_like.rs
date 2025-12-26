@@ -1,6 +1,6 @@
 use gpui::{
-    AnyElement, App, ClickEvent, DefiniteLength, Div, ElementId, Rems, Window, div, prelude::*,
-    relative,
+    AnyElement, App, ClickEvent, DefiniteLength, Div, ElementId, MouseButton, Rems, Window, div,
+    prelude::*, relative,
 };
 use smallvec::SmallVec;
 
@@ -169,10 +169,11 @@ impl RenderOnce for ButtonLike {
             .when_some(
                 self.on_click.filter(|_| !self.disabled),
                 |this, on_click| {
-                    this.on_click(move |event, window, cx| {
-                        cx.stop_propagation();
-                        on_click(event, window, cx)
-                    })
+                    this.on_mouse_down(MouseButton::Left, |_, window, _| window.prevent_default())
+                        .on_click(move |event, window, cx| {
+                            cx.stop_propagation();
+                            on_click(event, window, cx)
+                        })
                 },
             )
             .children(self.children)

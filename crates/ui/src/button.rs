@@ -1,6 +1,6 @@
 use gpui::{
-    App, ClickEvent, DefiniteLength, Div, ElementId, Hsla, Rems, SharedString, Window, div,
-    prelude::*, relative, rgb,
+    App, ClickEvent, DefiniteLength, Div, ElementId, Hsla, MouseButton, Rems, SharedString, Window,
+    div, prelude::*, relative, rgb,
 };
 
 use icons::IconName;
@@ -213,6 +213,16 @@ impl RenderOnce for Button {
             .when(self.variant == ButtonVariant::Outline, |this| {
                 this.border_1().border_color(rgb(0x545454))
             })
+            .when_some(
+                self.on_click.filter(|_| !self.disabled),
+                |this, on_click| {
+                    this.on_mouse_down(MouseButton::Left, |_, window, _| window.prevent_default())
+                        .on_click(move |event, window, cx| {
+                            cx.stop_propagation();
+                            on_click(event, window, cx)
+                        })
+                },
+            )
             .when(
                 self.icon.is_some() && icon_position == IconPosition::Start,
                 |this| {

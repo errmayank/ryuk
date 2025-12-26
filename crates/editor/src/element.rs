@@ -30,15 +30,15 @@ pub struct PositionMap {
 
 impl PositionMap {
     pub fn point_for_position(&self, position: Point<Pixels>, buffer: &Buffer) -> Option<usize> {
+        if !self.bounds.contains(&position) {
+            return None;
+        }
+
         if buffer.is_empty() {
             return Some(0);
         }
 
         let relative_y = position.y - self.bounds.top();
-        if relative_y < Pixels::ZERO {
-            return Some(0);
-        }
-
         let row = (relative_y / self.line_height).floor() as usize;
         let row = row.min(self.line_layouts.len().saturating_sub(1));
 

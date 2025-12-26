@@ -56,7 +56,7 @@ fn main() {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),
                     ..Default::default()
                 },
-                |_, cx| cx.new(Workspace::new),
+                |window, cx| cx.new(|cx| Workspace::new(window, cx)),
             )
             .unwrap();
         });

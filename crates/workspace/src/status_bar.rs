@@ -1,4 +1,4 @@
-use gpui::{Entity, Window, div, prelude::*, px, rgb};
+use gpui::{Entity, FocusHandle, Focusable, Window, div, prelude::*, px, rgb};
 
 use ui::{ButtonCommon, ButtonShape, ButtonSize, Clickable, IconButton, IconName};
 
@@ -6,19 +6,30 @@ use crate::Workspace;
 
 pub struct StatusBar {
     workspace: Entity<Workspace>,
+    focus_handle: FocusHandle,
 }
 
 impl StatusBar {
-    pub fn new(workspace: Entity<Workspace>, _cx: &mut Context<Self>) -> Self {
-        Self { workspace }
+    pub fn new(workspace: Entity<Workspace>, cx: &mut Context<Self>) -> Self {
+        Self {
+            workspace,
+            focus_handle: cx.focus_handle(),
+        }
+    }
+}
+
+impl Focusable for StatusBar {
+    fn focus_handle(&self, _cx: &gpui::App) -> FocusHandle {
+        self.focus_handle.clone()
     }
 }
 
 impl Render for StatusBar {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let workspace = self.workspace.clone();
 
         div()
+            .track_focus(&self.focus_handle(cx))
             .flex()
             .flex_row()
             .items_center()
@@ -33,7 +44,9 @@ impl Render for StatusBar {
                 IconButton::new("toggle-dock", IconName::Dock)
                     .size(ButtonSize::Compact)
                     .shape(ButtonShape::Square)
-                    .on_click(move |_, _, cx| workspace.update(cx, |w, cx| w.toggle_dock(cx))),
+                    .on_click(move |_, window, cx| {
+                        workspace.update(cx, |w, cx| w.toggle_dock(window, cx))
+                    }),
             )
     }
 }

@@ -1,5 +1,6 @@
 use gpui::{
-    App, Bounds, DragMoveEvent, Entity, Pixels, Point, Window, canvas, div, prelude::*, px, rgb,
+    App, Bounds, DragMoveEvent, Entity, Focusable, Pixels, Point, Window, canvas, div, prelude::*,
+    px, rgb,
 };
 
 use crate::{dock::Dock, pane::Pane, status_bar::StatusBar};
@@ -35,12 +36,17 @@ impl Render for DraggedDock {
 }
 
 impl Workspace {
-    pub fn new(cx: &mut Context<Self>) -> Self {
+    pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let workspace = cx.entity();
+        let pane = cx.new(Pane::new);
+
+        pane.update(cx, |pane, cx| {
+            pane.focus_editor(window, cx);
+        });
 
         Self {
             dock: cx.new(Dock::new),
-            pane: cx.new(Pane::new),
+            pane,
             status_bar: cx.new(|cx| StatusBar::new(workspace, cx)),
             bounds: Bounds::default(),
             previous_dock_drag_coordinates: None,
@@ -56,8 +62,27 @@ impl Workspace {
         });
     }
 
-    fn toggle_dock(&mut self, cx: &mut Context<Self>) {
-        self.dock.update(cx, |dock, cx| dock.toggle_visibility(cx));
+    fn toggle_dock(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.dock.read(cx).visible() {
+            let focus_handle = self.dock.read(cx).focus_handle(cx);
+            let has_focus = focus_handle.contains_focused(window, cx);
+
+            self.dock.update(cx, |dock, cx| {
+                dock.toggle_visibility(cx);
+            });
+
+            if has_focus {
+                self.pane.read(cx).focus_editor(window, cx);
+            }
+        } else {
+            self.dock.update(cx, |dock, cx| {
+                dock.toggle_visibility(cx);
+            });
+
+            let focus_handle = self.dock.read(cx).focus_handle(cx);
+            window.focus(&focus_handle);
+        }
+
         cx.notify();
     }
 }
