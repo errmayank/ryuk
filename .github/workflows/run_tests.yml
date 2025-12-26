@@ -36,7 +36,7 @@ jobs:
         uses: crate-ci/typos@v1.40.0
 
   run_tests:
-    name: "Run Tests (${{ matrix.name }})"
+    name: "${{ matrix.name }}"
     if: github.repository == 'errmayank/ryuk'
     strategy:
       fail-fast: false
