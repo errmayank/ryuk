@@ -3,10 +3,12 @@ resolver = "3"
 members = [
   "crates/assets",
   "crates/buffer",
+  "crates/editor",
   "crates/icons",
   "crates/ryuk",
   "crates/text",
   "crates/ui",
+  "crates/util",
   "crates/workspace",
 ]
 
@@ -26,6 +28,8 @@ type_complexity = "allow"
 ################################################################
 anyhow = { version = "1.0" }
 gpui = { git = "https://github.com/zed-industries/zed" }
+indoc = { version = "2.0" }
+pretty_assertions = { version = "1.4" }
 ropey = { version = "1.6" }
 rust-embed = { version = "8.0", features = ["debug-embed"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -36,7 +40,9 @@ strum = { version = "0.26", features = ["derive"] }
 ################################################################
 assets = { path = "crates/assets" }
 buffer = { path = "crates/buffer" }
+editor = { path = "crates/editor" }
 icons = { path = "crates/icons" }
 text = { path = "crates/text" }
 ui = { path = "crates/ui" }
+util = { path = "crates/util" }
 workspace = { path = "crates/workspace" }

@@ -13,6 +13,9 @@ workspace = true
 name = "text"
 path = "src/text.rs"
 
+[features]
+test-support = []
+
 [dependencies]
 ropey = { workspace = true }
 serde = { workspace = true }

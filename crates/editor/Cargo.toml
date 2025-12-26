@@ -1,0 +1,29 @@
+[package]
+name = "editor"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+name = "editor"
+path = "src/editor.rs"
+
+[features]
+test-support = ["text/test-support", "buffer/test-support", "gpui/test-support"]
+
+[dependencies]
+buffer = { workspace = true }
+gpui = { workspace = true }
+text = { workspace = true }
+ui = { workspace = true }
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }
+indoc = { workspace = true }
+pretty_assertions = { workspace = true }
+util = { workspace = true }
