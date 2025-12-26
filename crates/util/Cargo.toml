@@ -15,5 +15,3 @@ path = "src/util.rs"
 
 [features]
 test-support = []
-
-[dependencies]
