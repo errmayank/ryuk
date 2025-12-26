@@ -41,7 +41,7 @@ jobs:
         uses: crate-ci/typos@v1.40.0
 
   run_tests_linux_x86_64:
-    name: "Run tests / Linux x86_64"
+    name: "Test Linux x86_64"
     if: github.repository == 'errmayank/ryuk'
     runs-on: ubuntu-latest
     steps:
@@ -70,7 +70,7 @@ jobs:
         run: cargo nextest run --workspace --no-fail-fast
 
   run_tests_macos_arm64:
-    name: "Run tests / macOS ARM64"
+    name: "Test macOS ARM64"
     if: github.repository == 'errmayank/ryuk'
     runs-on: macos-latest
     steps:
@@ -88,7 +88,7 @@ jobs:
         run: cargo nextest run --workspace --no-fail-fast
 
   run_tests_macos_x86_64:
-    name: "Run tests / macOS x86_64"
+    name: "Test macOS x86_64"
     if: github.repository == 'errmayank/ryuk'
     runs-on: macos-15-intel
     steps:
@@ -106,7 +106,7 @@ jobs:
         run: cargo nextest run --workspace --no-fail-fast
 
   run_tests_windows_x86_64:
-    name: "Run tests / Windows x86_64"
+    name: "Test Windows x86_64"
     if: github.repository == 'errmayank/ryuk'
     runs-on: windows-latest
     steps:
