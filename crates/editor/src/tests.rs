@@ -239,37 +239,37 @@ fn test_toggle_formatting(cx: &mut TestAppContext) {
     cx.editor(|editor, _, cx| {
         let buffer = editor.buffer().read(cx);
 
-        // At "qui[c]k"
+        // At 'c' in "quick"
         let fmt = formatting_at(buffer, 7);
         assert_eq!(fmt.bold, Some(true));
         assert_eq!(fmt.italic, None);
         assert_eq!(fmt.underline, None);
 
-        // At "bro[w]n"
+        // At 'w' in "brown"
         let fmt = formatting_at(buffer, 13);
         assert_eq!(fmt.bold, Some(true));
         assert_eq!(fmt.italic, Some(true));
         assert_eq!(fmt.underline, None);
 
-        // At "fo[x]"
+        // At 'x' in "fox"
         let fmt = formatting_at(buffer, 18);
         assert_eq!(fmt.bold, Some(true));
         assert_eq!(fmt.italic, Some(true));
         assert_eq!(fmt.underline, Some(true));
 
-        // At "ju[m]ps"
+        // At 'm' in "jumps"
         let fmt = formatting_at(buffer, 22);
         assert_eq!(fmt.bold, None);
         assert_eq!(fmt.italic, Some(true));
         assert_eq!(fmt.underline, Some(true));
 
-        // At "o[v]er"
+        // At 'v' in "over"
         let fmt = formatting_at(buffer, 27);
         assert_eq!(fmt.bold, None);
         assert_eq!(fmt.italic, None);
         assert_eq!(fmt.underline, Some(true));
 
-        // At "over t[h]e lazy"
+        // At 'h' in "over the lazy"
         let fmt = formatting_at(buffer, 32);
         assert_eq!(fmt.bold, None);
         assert_eq!(fmt.italic, None);
