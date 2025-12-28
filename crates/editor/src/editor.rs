@@ -12,18 +12,26 @@ use gpui::{
     InteractiveElement, MouseDownEvent, MouseMoveEvent, Pixels, Point, UTF16Selection, Window,
     prelude::*,
 };
-use std::ops::Range;
+use std::{collections::VecDeque, ops::Range, time::Instant};
 
-use buffer::{Buffer, Selection, SelectionGoal};
-use text::TextPoint;
+use buffer::{Buffer, Selection, SelectionGoal, TextPoint, TransactionId};
 
 use crate::element::{EditorElement, PositionMap};
+
+#[derive(Clone, Debug)]
+struct Transaction {
+    id: TransactionId,
+    selection_before: Selection,
+    selection_after: Selection,
+}
 
 pub struct Editor {
     focus_handle: FocusHandle,
     buffer: Entity<Buffer>,
     selection: Selection,
     marked_range: Option<Selection>,
+    undo_stack: VecDeque<Transaction>,
+    redo_stack: VecDeque<Transaction>,
 }
 
 impl Editor {
@@ -34,6 +42,8 @@ impl Editor {
             buffer,
             selection: Selection::cursor(0),
             marked_range: None,
+            undo_stack: VecDeque::new(),
+            redo_stack: VecDeque::new(),
         }
     }
 
@@ -87,13 +97,29 @@ impl Editor {
     /// Inserts text at cursor, replacing any selected text.
     pub fn handle_input(&mut self, text: &str, _window: &mut Window, cx: &mut Context<Self>) {
         let range = self.selection.range();
-
-        self.buffer.update(cx, |buffer, _| {
-            buffer.replace(range.clone(), text);
+        let selection_before = self.selection;
+        let selection_after = Selection::cursor(range.start + text.len());
+        let transaction_id = self.buffer.update(cx, |buffer, _| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                buffer.replace(tx, range.clone(), text);
+            })
         });
 
-        let new_offset = range.start + text.len();
-        self.selection = Selection::cursor(new_offset);
+        self.selection = selection_after;
+        if let Some(transaction) = self
+            .undo_stack
+            .iter_mut()
+            .find(|entry| entry.id == transaction_id)
+        {
+            transaction.selection_after = selection_after;
+        } else {
+            self.undo_stack.push_back(Transaction {
+                id: transaction_id,
+                selection_before,
+                selection_after,
+            });
+            self.redo_stack.clear();
+        }
         cx.notify();
     }
 
@@ -141,11 +167,30 @@ impl Editor {
         }
 
         if !self.selection.is_empty() {
-            self.buffer.update(cx, |buffer, _| {
-                buffer.remove(self.selection.range());
+            let range = self.selection.range();
+            let selection_before = selection;
+            let selection_after = Selection::cursor(self.selection.start);
+            let transaction_id = self.buffer.update(cx, |buffer, _| {
+                buffer.transaction(Instant::now(), |buffer, tx| {
+                    buffer.remove(tx, range);
+                })
             });
 
-            self.selection = Selection::cursor(self.selection.start)
+            self.selection = selection_after;
+            if let Some(transaction) = self
+                .undo_stack
+                .iter_mut()
+                .find(|entry| entry.id == transaction_id)
+            {
+                transaction.selection_after = selection_after;
+            } else {
+                self.undo_stack.push_back(Transaction {
+                    id: transaction_id,
+                    selection_before,
+                    selection_after,
+                });
+                self.redo_stack.clear();
+            }
         }
 
         self.selection.goal = SelectionGoal::None;
@@ -177,11 +222,30 @@ impl Editor {
         }
 
         if !self.selection.is_empty() {
-            self.buffer.update(cx, |buffer, _| {
-                buffer.remove(self.selection.range());
+            let range = self.selection.range();
+            let selection_before = selection;
+            let selection_after = Selection::cursor(self.selection.start);
+            let transaction_id = self.buffer.update(cx, |buffer, _| {
+                buffer.transaction(Instant::now(), |buffer, tx| {
+                    buffer.remove(tx, range);
+                })
             });
 
-            self.selection = Selection::cursor(self.selection.start)
+            self.selection = selection_after;
+            if let Some(transaction) = self
+                .undo_stack
+                .iter_mut()
+                .find(|entry| entry.id == transaction_id)
+            {
+                transaction.selection_after = selection_after;
+            } else {
+                self.undo_stack.push_back(Transaction {
+                    id: transaction_id,
+                    selection_before,
+                    selection_after,
+                });
+                self.redo_stack.clear();
+            }
         }
 
         self.selection.goal = SelectionGoal::None;
@@ -207,18 +271,32 @@ impl Editor {
     /// Inserts a newline character at the cursor position.
     pub fn newline(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         let selection = self.selection;
-        if !selection.is_empty() {
-            self.buffer.update(cx, |buffer, _| {
-                buffer.remove(selection.range());
-            });
-        }
-
-        let cursor = selection.start;
-        self.buffer.update(cx, |buffer, _| {
-            buffer.insert(cursor, "\n");
+        let selection_before = selection;
+        let selection_after = Selection::cursor(selection.start + 1);
+        let transaction_id = self.buffer.update(cx, |buffer, _| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                if !selection.is_empty() {
+                    buffer.remove(tx, selection.range());
+                }
+                buffer.insert(tx, selection.start, "\n");
+            })
         });
 
-        self.selection = Selection::cursor(cursor + 1);
+        self.selection = selection_after;
+        if let Some(transaction) = self
+            .undo_stack
+            .iter_mut()
+            .find(|entry| entry.id == transaction_id)
+        {
+            transaction.selection_after = selection_after;
+        } else {
+            self.undo_stack.push_back(Transaction {
+                id: transaction_id,
+                selection_before,
+                selection_after,
+            });
+            self.redo_stack.clear();
+        }
         self.selection.goal = SelectionGoal::None;
         cx.notify();
     }
@@ -286,10 +364,20 @@ impl Editor {
             return;
         }
 
-        self.buffer.update(cx, |buffer, _cx| {
-            buffer.toggle_bold(self.selection.range());
+        let range = self.selection.range();
+        let selection = self.selection;
+        let transaction_id = self.buffer.update(cx, |buffer, _cx| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                buffer.toggle_bold(tx, range.clone());
+            })
         });
 
+        self.undo_stack.push_back(Transaction {
+            id: transaction_id,
+            selection_before: selection,
+            selection_after: selection,
+        });
+        self.redo_stack.clear();
         cx.notify();
     }
 
@@ -299,10 +387,20 @@ impl Editor {
             return;
         }
 
-        self.buffer.update(cx, |buffer, _cx| {
-            buffer.toggle_italic(self.selection.range());
+        let range = self.selection.range();
+        let selection = self.selection;
+        let transaction_id = self.buffer.update(cx, |buffer, _cx| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                buffer.toggle_italic(tx, range.clone());
+            })
         });
 
+        self.undo_stack.push_back(Transaction {
+            id: transaction_id,
+            selection_before: selection,
+            selection_after: selection,
+        });
+        self.redo_stack.clear();
         cx.notify();
     }
 
@@ -312,11 +410,45 @@ impl Editor {
             return;
         }
 
-        self.buffer.update(cx, |buffer, _cx| {
-            buffer.toggle_underline(self.selection.range());
+        let range = self.selection.range();
+        let selection = self.selection;
+        let transaction_id = self.buffer.update(cx, |buffer, _cx| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                buffer.toggle_underline(tx, range.clone());
+            })
         });
 
+        self.undo_stack.push_back(Transaction {
+            id: transaction_id,
+            selection_before: selection,
+            selection_after: selection,
+        });
+        self.redo_stack.clear();
         cx.notify();
+    }
+
+    pub fn undo(&mut self, _: &Undo, _window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(transaction) = self.undo_stack.pop_back() {
+            self.buffer.update(cx, |buffer, _| {
+                buffer.undo();
+            });
+
+            self.selection = transaction.selection_before;
+            self.redo_stack.push_back(transaction);
+            cx.notify();
+        }
+    }
+
+    pub fn redo(&mut self, _: &Redo, _window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(transaction) = self.redo_stack.pop_back() {
+            self.buffer.update(cx, |buffer, _| {
+                buffer.redo();
+            });
+
+            self.selection = transaction.selection_after;
+            self.undo_stack.push_back(transaction);
+            cx.notify();
+        }
     }
 }
 
@@ -369,6 +501,12 @@ impl Render for Editor {
             }))
             .on_action(cx.listener(|editor, _action: &MoveRight, window, cx| {
                 editor.move_right(window, cx);
+            }))
+            .on_action(cx.listener(|editor, action: &Undo, window, cx| {
+                editor.undo(action, window, cx);
+            }))
+            .on_action(cx.listener(|editor, action: &Redo, window, cx| {
+                editor.redo(action, window, cx);
             }))
             .child(EditorElement::new(cx.entity().clone()))
     }
@@ -455,12 +593,30 @@ impl EntityInputHandler for Editor {
             .map(|range| self.range_from_utf16(range, cx))
             .unwrap_or_else(|| self.selection.range());
 
-        self.buffer.update(cx, |buffer, _| {
-            buffer.replace(range.clone(), new_text);
+        let selection_before = self.selection;
+        let selection_after = Selection::cursor(range.start + new_text.len());
+        let text = new_text.to_string();
+        let transaction_id = self.buffer.update(cx, |buffer, _| {
+            buffer.transaction(Instant::now(), |buffer, tx| {
+                buffer.replace(tx, range.clone(), &text);
+            })
         });
 
-        let new_cursor = range.start + new_text.len();
-        self.selection = Selection::cursor(new_cursor);
+        self.selection = selection_after;
+        if let Some(transaction) = self
+            .undo_stack
+            .iter_mut()
+            .find(|entry| entry.id == transaction_id)
+        {
+            transaction.selection_after = selection_after;
+        } else {
+            self.undo_stack.push_back(Transaction {
+                id: transaction_id,
+                selection_before,
+                selection_after,
+            });
+            self.redo_stack.clear();
+        }
 
         let new_marked_range = if let Some(marked_range) = new_selection {
             let start = range.start + marked_range.start;
