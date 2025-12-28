@@ -142,10 +142,6 @@ impl Buffer {
         &self.format_spans
     }
 
-    pub fn set_format_spans(&mut self, spans: Vec<FormatSpan>) {
-        self.format_spans = spans;
-    }
-
     pub fn insert(&mut self, tx: &mut TransactionContext, offset: usize, text: &str) {
         tx.texts.push(TextOperation {
             range: offset..offset,
