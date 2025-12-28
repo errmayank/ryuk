@@ -5,11 +5,11 @@ use std::{
 };
 
 #[derive(Clone, Debug)]
-pub struct TextBuffer {
+pub struct Text {
     rope: Rope,
 }
 
-impl TextBuffer {
+impl Text {
     pub fn new() -> Self {
         Self { rope: Rope::new() }
     }
@@ -102,13 +102,13 @@ impl TextBuffer {
     }
 }
 
-impl Default for TextBuffer {
+impl Default for Text {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<&str> for TextBuffer {
+impl From<&str> for Text {
     fn from(text: &str) -> Self {
         Self {
             rope: Rope::from_str(text),
@@ -116,7 +116,7 @@ impl From<&str> for TextBuffer {
     }
 }
 
-impl Display for TextBuffer {
+impl Display for Text {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.rope)
     }

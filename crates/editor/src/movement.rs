@@ -1,5 +1,4 @@
-use buffer::{Buffer, SelectionGoal};
-use text::TextPoint;
+use buffer::{Buffer, SelectionGoal, TextPoint};
 
 /// Move cursor left one character, wrapping to previous line if at start of line.
 pub fn left(buffer: &Buffer, offset: usize) -> Option<usize> {

@@ -6,7 +6,6 @@ members = [
   "crates/editor",
   "crates/icons",
   "crates/ryuk",
-  "crates/text",
   "crates/ui",
   "crates/util",
   "crates/workspace",

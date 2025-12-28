@@ -14,8 +14,7 @@ use gpui::{
 };
 use std::{collections::VecDeque, ops::Range, time::Instant};
 
-use buffer::{Buffer, Selection, SelectionGoal, TransactionId};
-use text::TextPoint;
+use buffer::{Buffer, Selection, SelectionGoal, TextPoint, TransactionId};
 
 use crate::element::{EditorElement, PositionMap};
 

@@ -14,12 +14,11 @@ name = "editor"
 path = "src/editor.rs"
 
 [features]
-test-support = ["text/test-support", "buffer/test-support", "gpui/test-support"]
+test-support = ["buffer/test-support", "gpui/test-support"]
 
 [dependencies]
 buffer = { workspace = true }
 gpui = { workspace = true }
-text = { workspace = true }
 ui = { workspace = true }
 
 [dev-dependencies]

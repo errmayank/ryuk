@@ -1,15 +1,16 @@
 mod format_span;
 mod selection;
+pub mod text;
 
 pub use format_span::*;
 pub use selection::*;
+pub use text::*;
 
 use std::{
     collections::VecDeque,
     ops::Range,
     time::{Duration, Instant},
 };
-use text::{TextBuffer, TextPoint};
 
 pub type TransactionId = usize;
 
@@ -57,7 +58,7 @@ struct Transaction {
 
 #[derive(Clone, Debug)]
 pub struct Buffer {
-    text: TextBuffer,
+    text: Text,
     format_spans: Vec<FormatSpan>,
     next_transaction_id: usize,
     undo_stack: VecDeque<Transaction>,
@@ -68,7 +69,7 @@ pub struct Buffer {
 impl Buffer {
     pub fn new() -> Self {
         Self {
-            text: TextBuffer::new(),
+            text: Text::new(),
             format_spans: Vec::new(),
             next_transaction_id: 0,
             undo_stack: VecDeque::new(),
@@ -79,7 +80,7 @@ impl Buffer {
 
     pub fn from_text(text: impl Into<String>) -> Self {
         Self {
-            text: TextBuffer::from(text.into().as_str()),
+            text: Text::from(text.into().as_str()),
             format_spans: Vec::new(),
             next_transaction_id: 0,
             undo_stack: VecDeque::new(),

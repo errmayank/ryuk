@@ -5,8 +5,7 @@ use gpui::{
 };
 use std::collections::BTreeSet;
 
-use buffer::{Buffer, FormatSpan};
-use text::TextPoint;
+use buffer::{Buffer, FormatSpan, TextPoint};
 
 use crate::Editor;
 
