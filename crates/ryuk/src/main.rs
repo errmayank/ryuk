@@ -5,7 +5,7 @@ use gpui::{
 
 use editor::{
     Backspace, Delete, DeleteToBeginningOfLine, DeleteToEndOfLine, MoveDown, MoveLeft, MoveRight,
-    MoveUp, Newline, ToggleBold, ToggleItalic, ToggleUnderline,
+    MoveUp, Newline, Redo, ToggleBold, ToggleItalic, ToggleUnderline, Undo,
 };
 use workspace::Workspace;
 
@@ -33,6 +33,8 @@ fn main() {
                 KeyBinding::new("delete", Delete, None),
                 KeyBinding::new("cmd-delete", DeleteToEndOfLine, None),
                 KeyBinding::new("ctrl-k", DeleteToEndOfLine, None),
+                KeyBinding::new("cmd-z", Undo, None),
+                KeyBinding::new("cmd-shift-z", Redo, None),
                 // Format
                 KeyBinding::new("cmd-b", ToggleBold, None),
                 KeyBinding::new("cmd-i", ToggleItalic, None),

@@ -59,3 +59,11 @@ pub struct MoveLeft;
 #[derive(PartialEq, Clone, Default, Action)]
 #[action(namespace = editor)]
 pub struct MoveRight;
+
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct Undo;
+
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct Redo;

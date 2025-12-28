@@ -1,5 +1,5 @@
 use gpui::{Context, Entity, TestAppContext, VisualTestContext, Window};
-use std::ops::Deref;
+use std::{ops::Deref, time::Instant};
 
 use buffer::Selection;
 use util::test::{generate_marked_text, marked_text_ranges};
@@ -16,6 +16,14 @@ impl EditorTestContext {
         let window = cx.add_window(|_, cx| Editor::new(cx));
         let editor = window.root(cx).unwrap();
 
+        // Disable transaction grouping for deterministic test behavior
+        // Each operation should be a separate transaction for testing undo/redo
+        editor.update(cx, |editor, cx| {
+            editor.buffer().update(cx, |buffer, _| {
+                buffer.set_group_interval(std::time::Duration::ZERO);
+            });
+        });
+
         Self {
             cx: VisualTestContext::from_window(*window.deref(), cx),
             editor,
@@ -28,7 +36,9 @@ impl EditorTestContext {
 
         self.editor.update_in(&mut self.cx, |editor, window, cx| {
             editor.buffer().update(cx, |buffer, _| {
-                buffer.replace(0..buffer.len(), &unmarked_text);
+                buffer.transaction(Instant::now(), |buffer, tx| {
+                    buffer.replace(tx, 0..buffer.len(), &unmarked_text);
+                });
             });
 
             if let Some(range) = selection_ranges.first() {

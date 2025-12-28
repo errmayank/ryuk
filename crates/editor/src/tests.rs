@@ -5,7 +5,34 @@ pub use context::EditorTestContext;
 use gpui::TestAppContext;
 use indoc::indoc;
 
+use crate::{Redo, Undo};
 use buffer::{Buffer, FormatSpan, Selection};
+
+/// Returns the effective formatting at an offset.
+fn formatting_at(buffer: &Buffer, offset: usize) -> FormatSpan {
+    let mut result = FormatSpan {
+        range: offset..offset,
+        bold: None,
+        italic: None,
+        underline: None,
+    };
+
+    for span in buffer.format_spans() {
+        if span.range.contains(&offset) {
+            if span.bold.is_some() {
+                result.bold = span.bold;
+            }
+            if span.italic.is_some() {
+                result.italic = span.italic;
+            }
+            if span.underline.is_some() {
+                result.underline = span.underline;
+            }
+        }
+    }
+
+    result
+}
 
 #[gpui::test]
 fn test_backspace(cx: &mut TestAppContext) {
@@ -430,28 +457,248 @@ fn test_selection_movement_collapses(cx: &mut TestAppContext) {
     "});
 }
 
-/// Returns the effective formatting at an offset.
-fn formatting_at(buffer: &Buffer, offset: usize) -> FormatSpan {
-    let mut result = FormatSpan {
-        range: offset..offset,
-        bold: None,
-        italic: None,
-        underline: None,
-    };
+#[gpui::test]
+fn test_undo_redo_input(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
 
-    for span in buffer.format_spans() {
-        if span.range.contains(&offset) {
-            if span.bold.is_some() {
-                result.bold = span.bold;
-            }
-            if span.italic.is_some() {
-                result.italic = span.italic;
-            }
-            if span.underline.is_some() {
-                result.underline = span.underline;
-            }
-        }
-    }
+    cx.set_state(indoc! {"
+        The quick brown foxˇ
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.handle_input("\njumps over the lazy dog", window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown fox
+        jumps over the lazy dogˇ
+    "});
 
-    result
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown foxˇ
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown fox
+        jumps over the lazy dogˇ
+    "});
+}
+
+#[gpui::test]
+fn test_undo_redo_backspace(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The quick brown fox
+        jumpsˇ over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.backspace(window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown fox
+        jumpˇ over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown fox
+        jumpsˇ over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown fox
+        jumpˇ over the lazy dog
+    "});
+}
+
+#[gpui::test]
+fn test_undo_redo_delete(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The quˇick brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.delete(window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quˇck brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quˇick brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quˇck brown fox
+        jumps over the lazy dog
+    "});
+}
+
+#[gpui::test]
+fn test_undo_redo_selection(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The «quickˇ» brown fox
+        jumps over the lazy dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.backspace(window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The ˇ brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.change_selections(window, cx, |s| {
+            *s = Selection::new(30, 34);
+        });
+    });
+    cx.assert_editor_state(indoc! {"
+        The  brown fox
+        jumps over the «lazyˇ» dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.delete(window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The  brown fox
+        jumps over the ˇ dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The  brown fox
+        jumps over the «lazyˇ» dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The «quickˇ» brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The ˇ brown fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The  brown fox
+        jumps over the ˇ dog
+    "});
+}
+
+#[gpui::test]
+fn test_undo_redo_multiple(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        ˇ
+        jumps over the lazy dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.handle_input("The quick", window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quickˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.handle_input(" brown", window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brownˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quickˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.handle_input(" brown fox", window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown foxˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quickˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        ˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        ˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quickˇ
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brown foxˇ
+        jumps over the lazy dog
+    "});
 }
