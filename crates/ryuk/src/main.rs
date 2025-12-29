@@ -4,8 +4,8 @@ use gpui::{
 };
 
 use editor::{
-    Backspace, Delete, DeleteToBeginningOfLine, DeleteToEndOfLine, MoveDown, MoveLeft, MoveRight,
-    MoveUp, Newline, Redo, ToggleBold, ToggleItalic, ToggleUnderline, Undo,
+    Backspace, Copy, Cut, Delete, DeleteToBeginningOfLine, DeleteToEndOfLine, MoveDown, MoveLeft,
+    MoveRight, MoveUp, Newline, Paste, Redo, ToggleBold, ToggleItalic, ToggleUnderline, Undo,
 };
 use workspace::Workspace;
 
@@ -35,6 +35,10 @@ fn main() {
                 KeyBinding::new("ctrl-k", DeleteToEndOfLine, None),
                 KeyBinding::new("cmd-z", Undo, None),
                 KeyBinding::new("cmd-shift-z", Redo, None),
+                // Clipboard
+                KeyBinding::new("cmd-x", Cut, None),
+                KeyBinding::new("cmd-c", Copy, None),
+                KeyBinding::new("cmd-v", Paste, None),
                 // Format
                 KeyBinding::new("cmd-b", ToggleBold, None),
                 KeyBinding::new("cmd-i", ToggleItalic, None),
