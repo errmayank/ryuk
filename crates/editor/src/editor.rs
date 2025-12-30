@@ -8,7 +8,7 @@ mod tests;
 pub use actions::*;
 
 use gpui::{
-    App, Bounds, CursorStyle, Entity, EntityInputHandler, FocusHandle, Focusable,
+    App, Bounds, ClipboardItem, CursorStyle, Entity, EntityInputHandler, FocusHandle, Focusable,
     InteractiveElement, MouseDownEvent, MouseMoveEvent, Pixels, Point, UTF16Selection, Window,
     prelude::*,
 };
@@ -450,6 +450,94 @@ impl Editor {
             cx.notify();
         }
     }
+
+    pub fn cut(&mut self, _: &Cut, _window: &mut Window, cx: &mut Context<Self>) {
+        let range = self.selection.range();
+        let text = self
+            .buffer
+            .update(cx, |buffer, _| buffer.slice(range.clone()));
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
+
+        if !self.selection.is_empty() {
+            let selection_before = self.selection;
+            let selection_after = Selection::cursor(self.selection.start);
+            let transaction_id = self.buffer.update(cx, |buffer, _| {
+                buffer.transaction(Instant::now(), |buffer, tx| {
+                    buffer.remove(tx, range);
+                })
+            });
+
+            self.selection = selection_after;
+            if let Some(transaction) = self
+                .undo_stack
+                .iter_mut()
+                .find(|entry| entry.id == transaction_id)
+            {
+                transaction.selection_after = selection_after;
+            } else {
+                self.undo_stack.push_back(Transaction {
+                    id: transaction_id,
+                    selection_before,
+                    selection_after,
+                });
+                self.redo_stack.clear();
+            }
+            cx.notify();
+        }
+    }
+
+    pub fn copy(&mut self, _: &Copy, _window: &mut Window, cx: &mut Context<Self>) {
+        let text = self.buffer.update(cx, |buffer, _| {
+            if self.selection.is_cursor() {
+                let row = buffer.offset_to_point(self.selection.start).row;
+                let line_start = buffer.point_to_offset(TextPoint { row, column: 0 });
+                let line_end = buffer.point_to_offset(TextPoint {
+                    row,
+                    column: buffer.line_len(row),
+                });
+                let mut line = buffer.slice(line_start..line_end);
+                if !line.ends_with('\n') {
+                    line.push('\n');
+                }
+                line
+            } else {
+                buffer.slice(self.selection.range())
+            }
+        });
+
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
+    }
+
+    pub fn paste(&mut self, _: &Paste, _window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(item) = cx.read_from_clipboard() {
+            let text = item.text().unwrap_or_default();
+            let range = self.selection.range();
+            let selection_before = self.selection;
+            let selection_after = Selection::cursor(range.start + text.len());
+            let transaction_id = self.buffer.update(cx, |buffer, _| {
+                buffer.transaction(Instant::now(), |buffer, tx| {
+                    buffer.replace(tx, range.clone(), &text);
+                })
+            });
+
+            self.selection = selection_after;
+            if let Some(transaction) = self
+                .undo_stack
+                .iter_mut()
+                .find(|entry| entry.id == transaction_id)
+            {
+                transaction.selection_after = selection_after;
+            } else {
+                self.undo_stack.push_back(Transaction {
+                    id: transaction_id,
+                    selection_before,
+                    selection_after,
+                });
+                self.redo_stack.clear();
+            }
+            cx.notify();
+        }
+    }
 }
 
 impl Render for Editor {
@@ -507,6 +595,15 @@ impl Render for Editor {
             }))
             .on_action(cx.listener(|editor, action: &Redo, window, cx| {
                 editor.redo(action, window, cx);
+            }))
+            .on_action(cx.listener(|editor, action: &Cut, window, cx| {
+                editor.cut(action, window, cx);
+            }))
+            .on_action(cx.listener(|editor, action: &Copy, window, cx| {
+                editor.copy(action, window, cx);
+            }))
+            .on_action(cx.listener(|editor, action: &Paste, window, cx| {
+                editor.paste(action, window, cx);
             }))
             .child(EditorElement::new(cx.entity().clone()))
     }

@@ -1,4 +1,4 @@
-use gpui::{Context, Entity, TestAppContext, VisualTestContext, Window};
+use gpui::{ClipboardItem, Context, Entity, TestAppContext, VisualTestContext, Window};
 use std::{ops::Deref, time::Instant};
 
 use buffer::Selection;
@@ -90,5 +90,13 @@ impl EditorTestContext {
     ) -> R {
         self.editor
             .update_in(&mut self.cx, |editor, window, cx| f(editor, window, cx))
+    }
+
+    pub fn read_from_clipboard(&self) -> Option<ClipboardItem> {
+        self.cx.read_from_clipboard()
+    }
+
+    pub fn write_to_clipboard(&mut self, item: ClipboardItem) {
+        self.cx.write_to_clipboard(item);
     }
 }

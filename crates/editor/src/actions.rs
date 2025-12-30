@@ -67,3 +67,15 @@ pub struct Undo;
 #[derive(PartialEq, Clone, Default, Action)]
 #[action(namespace = editor)]
 pub struct Redo;
+
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct Cut;
+
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct Copy;
+
+#[derive(PartialEq, Clone, Default, Action)]
+#[action(namespace = editor)]
+pub struct Paste;

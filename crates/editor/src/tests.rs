@@ -2,10 +2,10 @@ mod context;
 
 pub use context::EditorTestContext;
 
-use gpui::TestAppContext;
+use gpui::{ClipboardItem, TestAppContext};
 use indoc::indoc;
 
-use crate::{Redo, Undo};
+use crate::{Copy, Cut, Paste, Redo, Undo};
 use buffer::{Buffer, FormatSpan, Selection};
 
 /// Returns the effective formatting at an offset.
@@ -701,4 +701,176 @@ fn test_undo_redo_multiple(cx: &mut TestAppContext) {
         The quick brown foxˇ
         jumps over the lazy dog
     "});
+}
+
+#[gpui::test]
+fn test_cut(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The «quickˇ» brown fox
+        jumps over the lazy dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.cut(&Cut, window, cx);
+    });
+
+    let clipboard_text = cx
+        .read_from_clipboard()
+        .and_then(|item| item.text())
+        .unwrap();
+    assert_eq!(clipboard_text, "quick");
+    cx.assert_editor_state(indoc! {"
+        The ˇ brown fox
+        jumps over the lazy dog
+    "});
+}
+
+#[gpui::test]
+fn test_copy(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The «quickˇ» brown fox
+        jumps over the lazy dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.copy(&Copy, window, cx);
+    });
+
+    let clipboard_text = cx
+        .read_from_clipboard()
+        .and_then(|item| item.text())
+        .unwrap();
+    assert_eq!(clipboard_text, "quick");
+    cx.assert_editor_state(indoc! {"
+        The «quickˇ» brown fox
+        jumps over the lazy dog
+    "});
+}
+
+#[gpui::test]
+fn test_copy_line(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state("The quick ˇbrown fox\njumps over the lazy dog");
+    cx.update_editor(|editor, window, cx| {
+        editor.copy(&Copy, window, cx);
+    });
+    let clipboard_text = cx
+        .read_from_clipboard()
+        .and_then(|item| item.text())
+        .unwrap();
+    assert_eq!(clipboard_text, "The quick brown fox\n");
+
+    // Last line
+    cx.update_editor(|editor, window, cx| {
+        editor.change_selections(window, cx, |s| {
+            *s = Selection::cursor(35);
+        });
+    });
+    cx.assert_editor_state("The quick brown fox\njumps over the ˇlazy dog");
+    cx.update_editor(|editor, window, cx| {
+        editor.copy(&Copy, window, cx);
+    });
+    let clipboard_text = cx
+        .read_from_clipboard()
+        .and_then(|item| item.text())
+        .unwrap();
+    assert_eq!(clipboard_text, "jumps over the lazy dog\n");
+}
+
+#[gpui::test]
+fn test_paste(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.write_to_clipboard(ClipboardItem::new_string("brown ".to_string()));
+    cx.set_state("The quick ˇfox");
+    cx.update_editor(|editor, window, cx| {
+        editor.paste(&Paste, window, cx);
+    });
+
+    cx.assert_editor_state("The quick brown ˇfox");
+}
+
+#[gpui::test]
+fn test_paste_replace_selection(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.write_to_clipboard(ClipboardItem::new_string("brown".to_string()));
+    cx.set_state("The quick «blueˇ» fox");
+    cx.update_editor(|editor, window, cx| {
+        editor.paste(&Paste, window, cx);
+    });
+
+    cx.assert_editor_state("The quick brownˇ fox");
+}
+
+#[gpui::test]
+fn test_cut_and_paste(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state(indoc! {"
+        The quick «brownˇ» fox
+        jumps over the lazy dog
+    "});
+    cx.update_editor(|editor, window, cx| {
+        editor.cut(&Cut, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick ˇ fox
+        jumps over the lazy dog
+    "});
+
+    cx.update_editor(|editor, window, cx| {
+        editor.paste(&Paste, window, cx);
+    });
+    cx.assert_editor_state(indoc! {"
+        The quick brownˇ fox
+        jumps over the lazy dog
+    "});
+}
+
+#[gpui::test]
+fn test_undo_redo_cut(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.set_state("The quick «brownˇ» fox");
+    cx.update_editor(|editor, window, cx| {
+        editor.cut(&Cut, window, cx);
+    });
+    cx.assert_editor_state("The quick ˇ fox");
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state("The quick «brownˇ» fox");
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state("The quick ˇ fox");
+}
+
+#[gpui::test]
+fn test_undo_redo_paste(cx: &mut TestAppContext) {
+    let mut cx = EditorTestContext::new(cx);
+
+    cx.write_to_clipboard(ClipboardItem::new_string("brown ".to_string()));
+
+    cx.set_state("The quick ˇfox");
+    cx.update_editor(|editor, window, cx| {
+        editor.paste(&Paste, window, cx);
+    });
+    cx.assert_editor_state("The quick brown ˇfox");
+
+    cx.update_editor(|editor, window, cx| {
+        editor.undo(&Undo, window, cx);
+    });
+    cx.assert_editor_state("The quick ˇfox");
+
+    cx.update_editor(|editor, window, cx| {
+        editor.redo(&Redo, window, cx);
+    });
+    cx.assert_editor_state("The quick brown ˇfox");
 }
